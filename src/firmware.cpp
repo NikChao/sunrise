@@ -2,6 +2,7 @@
 #include "time.h"
 #include <Adafruit_NeoPixel.h>
 #include <FastLED.h>
+#include <RTCLib.h>
 #include <TM1637.h>
 #include <Wire.h>
 #include <time.h>
@@ -24,6 +25,7 @@ CRGB leds[NUM_LEDS];
 #define DS1307_ADDRESS 0x68 // I2C address for DS1307
 #define SDA_PIN 21
 #define SCL_PIN 22
+RTC_DS1307 rtc;
 
 void IRAM_ATTR toggleLedISR() {
   if (on) {
@@ -41,11 +43,17 @@ void setup() {
   FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(255);
 
+  // 7seg
   tm.init();
   tm.set(BRIGHT_TYPICAL);
   tm.point(false);
 
+  // Clock
   Wire.begin(SDA_PIN, SCL_PIN);
+  if (!rtc.isrunning()) {
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  }
+
   attachInterrupt(digitalPinToInterrupt(btnPin), toggleLedISR, FALLING);
 }
 
